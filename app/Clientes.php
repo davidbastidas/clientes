@@ -8,8 +8,8 @@ class Clientes extends Model
 {
     protected $table = 'clientes';
 
-    public function poblacion()
+    public function poblacionFk()
     {
-        return $this->belongsTo('App\Poblacion', 'poblacion_id');
+        return $this->belongsTo('App\Poblacion', 'poblacion');
     }
 }

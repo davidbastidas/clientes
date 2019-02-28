@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Anomalias extends Model
+class Poblacion extends Model
 {
     protected $table = 'poblacion';
 }

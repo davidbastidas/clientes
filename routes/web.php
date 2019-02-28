@@ -30,7 +30,11 @@ Route::group(['middleware' => 'shareViews'], function () {
             'uses' => 'ClientesController@index'
         ]);
 
-        Route::post('cliente/save/{id}', [
+        Route::post('cliente/save', [
+            'as' => 'cliente.save',
+            'uses' => 'ClientesController@save'
+        ]);
+        Route::get('cliente/save', [
             'as' => 'cliente.save',
             'uses' => 'ClientesController@save'
         ]);
@@ -38,6 +42,16 @@ Route::group(['middleware' => 'shareViews'], function () {
         Route::get('cliente/edit/{id}', [
             'as' => 'cliente.edit',
             'uses' => 'ClientesController@edit'
+        ]);
+
+        Route::get('cliente/buscar', [
+            'as' => 'cliente.buscar',
+            'uses' => 'ClientesController@buscar'
+        ]);
+
+        Route::get('cliente/descarga/documento/{id}', [
+            'as' => 'cliente.descarga.documento',
+            'uses' => 'ClientesController@descarga'
         ]);
 
     });

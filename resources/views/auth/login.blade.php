@@ -5,7 +5,10 @@
             <div class="row d-flex align-items-stretch">
                 <div class="col-md-4 banner-section d-none d-md-flex align-items-stretch justify-content-center">
                     <div class="bg-1">
+                      LOGO
+                        <!--
                         <img src="{{asset('public/images/left-banner.jpg')}}" height="100%" width="100%">
+                      -->
                     </div>
                 </div>
                 <div class="col-12 col-md-8 h-100 bg-white">
@@ -49,7 +52,7 @@
                                 <button type="submit" class="btn btn-primary submit-btn">INGRESAR</button>
                             </div>
                             <div class="wrapper mt-5 text-gray">
-                                <p class="footer-text">Copyright © 2018 Gestion Avisos 2.0. All rights reserved.</p>
+                                <p class="footer-text">Copyright © 2018 Beneficiarios 1.0. All rights reserved.</p>
                             </div>
                         </form>
                     </div>

@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Operativa</title>
+    <title>Clientes</title>
     <link href="{{ asset('public/leaflet/leaflet.css') }}" rel="stylesheet">
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{asset('public/staradmin/assets/vendors/iconfonts/mdi/css/materialdesignicons.min.css')}}">

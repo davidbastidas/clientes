@@ -2,17 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\AdminTable;
-use App\Agenda;
-use App\Anomalias;
-use App\Avisos;
-use App\AvisosTemp;
-use App\Delegacion;
-use App\EntidadesPagos;
-use App\ObservacionesRapidas;
-use App\Resultados;
+use App\Clientes;
+use App\ClientesArchivos;
+use App\Poblacion;
+use App\TipoEsquema as Esquema;
+use App\TipoVehiculo as Vehiculos;
 use App\User;
-use App\Usuarios;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -27,113 +22,96 @@ use Maatwebsite\Excel\Facades\Excel;
 class ClientesController extends Controller
 {
 
-    public function index()
+    public function descarga($id)
     {
-        $delegaciones = Delegacion::all();
+      $archivo = ClientesArchivos::where('cliente_id',$id)->first();
 
-        $perPage = 6;
-        $page = Input::get('page');
-        $pageName = 'page';
-        $page = Paginator::resolveCurrentPage($pageName);
-        $offSet = ($page * $perPage) - $perPage;
-
-        $agenda = new Agenda();
-
-        $agendas = $agenda->offset($offSet)->limit($perPage)->orderByDesc('id')->get();
-
-        $total_registros = Agenda::all()->count();
-        $array = [];
-        $agendaCollection = null;
-
-        foreach ($agendas as $agenda) {
-
-            $user = User::where('id', $agenda->admin_id)->first()->name;
-
-            $pendientes = Avisos::where('estado', 1)->where('agenda_id', $agenda->id)->count();
-            $realizados = Avisos::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
-            $cargasPendientes = AvisosTemp::where('agenda_id', $agenda->id)->count();
-
-            $flag = false;
-
-            if ($pendientes > 0){
-                $flag = true;
-            }
-            if ($cargasPendientes > 0){
-                $flag = true;
-            }
-
-            if ($realizados > 0){
-                $flag = true;
-            }
-
-            array_push($array, (object)array(
-                'id' => $agenda->id,
-                'codigo' => $agenda->codigo,
-                'fecha' => $agenda->fecha,
-                'delegacion' => $agenda->delegacion->nombre,
-                'usuario' => $user,
-                'pendientes' => $pendientes,
-                'realizados' => $realizados,
-                'cargasPendientes' => $cargasPendientes,
-                'flag' => $flag
-            ));
-        }
-
-        $agendaCollection = new Collection($array);
-
-        $posts = new LengthAwarePaginator($agendaCollection, $total_registros, $perPage, $page, [
-            'path' => Paginator::resolveCurrentPath(),
-            'pageName' => $pageName,
-        ]);
-
-        return view('agenda.agenda',
-            [
-                'totalAvisos' => 0,
-                'delegaciones' => $delegaciones,
-                'agendas' => $posts
-            ])->withPosts($posts);
+      $file = config('myconfig.ruta_documentos'). $archivo->nombre_doc;
+      $headers = array(
+        'Content-Type' => 'application/pdf',
+      );
+      return response()->download($file, $archivo->nombre_doc, $headers);
     }
 
-    public function save(Request $request)
-    {
+    public function save(Request $request) {
 
-        $agenda = new Agenda();
-        $agenda->fecha = $request->fecha;
-        $agenda->delegacion_id = $request->delegacion;
-        $agenda->admin_id = Auth::user()->id;
+      if(isset($request->nombres)){
+        $cliente = null;
+        if(isset($request->cliente)){
+          $cliente = Clientes::find($request->cliente);
+        }else{
+          $cliente = new Clientes();
+        }
 
-        $agenda->save();
+        $cliente->nombres = $request->nombres;
+        $cliente->cedula = $request->cedula;
+        $cliente->poblacion = $request->poblacion;
+        $cliente->resolucion = $request->resolucion;
+        $cliente->tipo_esquema = $request->tipo_esquema;
+        $cliente->cantidad_escoltas = $request->cantidad_escoltas;
+        $cliente->serial_chaleco = $request->serial_chaleco;
+        $cliente->imei_celular = $request->imei_celular;
+        $cliente->tipo_vehiculo = $request->tipo_vehiculo;
+        $cliente->placa_vehiculo = $request->placa_vehiculo;
+        $cliente->observaciones = $request->observaciones;
+        $cliente->estado = 1;
+        $cliente->user_id = Auth::user()->id;
 
-        $anio = Carbon::now()->year;
+        $cliente->save();
 
-        $agenda->codigo = "AGE-" . $agenda->id . "-" . $anio;
+        if($request->file('file') != null){
+          $uploadedFile = $request->file('file');
 
-        $agenda->save();
-
-        return redirect()->route('agenda');
+          if ($uploadedFile->isValid()) {
+            $documento = null;
+            if(isset($request->cliente)){
+              $documento = ClientesArchivos::where('cliente_id',$cliente->id)->first();
+            }else{
+              $documento = new ClientesArchivos();
+              $documento->cliente_id = $cliente->id;
+              $documento->nombre_doc = '';
+              $documento->save();
+              $documento->nombre_doc = $documento->id.'.pdf';
+              $documento->save();
+            }
+            $uploadedFile->move(config('myconfig.ruta_documentos'), $documento->nombre_doc);
+          }
+        }
+        return redirect()->route('cliente.buscar',['identificacion' => $cliente->id]);
+      }else{
+        $poblacion = Poblacion::all();
+        $esquema = Esquema::all();
+        $vehiculos = Vehiculos::all();
+        return view('clientes.formulario',
+          [
+            'poblacion' => $poblacion,
+            'esquema' => $esquema,
+            'vehiculos' => $vehiculos
+          ]);
+      }
+      return redirect()->route('home');
     }
 
     public function edit($id){
-        $aviso = Avisos::where('id', $id)->first();
-        $resultados = Resultados::all();
-        $anomalias = Anomalias::all();
-        $recaudos = EntidadesPagos::all();
-        $observaciones = ObservacionesRapidas::all();
+      $cliente = Clientes::where('id', $id)->first();
+      $poblacion = Poblacion::all();
+      $esquema = Esquema::all();
+      $vehiculos = Vehiculos::all();
+      return view('clientes.formulario',
+          [
+            'poblacion' => $poblacion,
+            'esquema' => $esquema,
+            'vehiculos' => $vehiculos,
+            'cliente' => $cliente
+          ]);
+    }
 
-        $filename = $aviso->id . ".png";
-
-        $path = config('myconfig.public_fotos')  . $filename;
-
-        $id = Auth::user()->id;
-
-        return view('agenda.editar', [
-            'aviso' => $aviso,
-            'id' => $id,
-            'resultados' => $resultados,
-            'anomalias' => $anomalias,
-            'recaudos' => $recaudos,
-            'observaciones' => $observaciones,
-            'path' => $path
-        ]);
+    public function buscar(){
+      $identificacion = Input::get('identificacion');
+      $clientes = Clientes::where('cedula', $identificacion)->get();
+      return view('home', [
+        'clientes' => $clientes,
+        'identificacion' => $identificacion
+      ]);
     }
 }
