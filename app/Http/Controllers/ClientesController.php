@@ -65,8 +65,9 @@ class ClientesController extends Controller
           if ($uploadedFile->isValid()) {
             $documento = null;
             if(isset($request->cliente)){
-              $documento = ClientesArchivos::where('cliente_id',$cliente->id)->first();
-            }else{
+              $documento = ClientesArchivos::where('cliente_id', $cliente->id)->first();
+            }
+            if(!isset($documento->id)){
               $documento = new ClientesArchivos();
               $documento->cliente_id = $cliente->id;
               $documento->nombre_doc = '';
@@ -74,10 +75,11 @@ class ClientesController extends Controller
               $documento->nombre_doc = $documento->id.'.pdf';
               $documento->save();
             }
+            
             $uploadedFile->move(config('myconfig.ruta_documentos'), $documento->nombre_doc);
           }
         }
-        return redirect()->route('cliente.buscar',['identificacion' => $cliente->id]);
+        return redirect()->route('cliente.buscar',['identificacion' => $cliente->cedula]);
       }else{
         $poblacion = Poblacion::all();
         $esquema = Esquema::all();
